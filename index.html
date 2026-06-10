@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ham Radio News</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Brand fonts (Oswald + Source Sans Pro per Everyday Ham design guide) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1080px;
+      height: 1920px;
+      margin: 0;
+      padding: 0;
+      /* Everyday Ham navy gradient */
+      background: linear-gradient(135deg, #152333 0%, #0d1620 100%);
+      font-family: 'Source Sans Pro', 'Segoe UI', Arial, sans-serif;
+      color: #fdf8e5;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 40px 120px 40px;
+    }
+
+    .header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 4px solid #ff7030;
+    }
+
+    .header-title {
+      font-family: 'Oswald', Arial, sans-serif;
+      font-weight: 500;
+      letter-spacing: 4px;
+      font-size: 5rem;
+      color: #ff7030;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.8);
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .header-subtitle {
+      font-size: 1.8rem;
+      color: rgba(253, 248, 229, 0.7);
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .news-card {
+      width: 100%;
+      max-width: 1000px;
+      max-height: 1650px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 112, 48, 0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .news-card.active {
+      opacity: 1;
+    }
+
+    .news-image-container {
+      width: 100%;
+      height: 500px;
+      background: #0d1620;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .news-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .news-source-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 112, 48, 0.95);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-family: 'Oswald', Arial, sans-serif;
+      font-weight: 500;
+      letter-spacing: 1px;
+      font-size: 2rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .news-content {
+      padding: 40px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .news-headline {
+      font-family: 'Oswald', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 3rem;
+      line-height: 1.3;
+      margin-bottom: 25px;
+      color: #fdf8e5;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .news-description {
+      font-size: 2rem;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      color: rgba(253, 248, 229, 0.9);
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+      text-align: left; /* justify creates ugly gaps at signage sizes */
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 25px;
+      border-top: 2px solid rgba(255, 112, 48, 0.3);
+      flex-shrink: 0;
+    }
+
+    .news-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .news-time {
+      font-size: 1.8rem;
+      color: #ff7030;
+      font-weight: 600;
+    }
+
+    .news-qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .qr-code {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .qr-label {
+      font-size: 1.8rem;
+      color: #ff7030;
+      font-weight: 600;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 800px;
+      gap: 30px;
+    }
+
+    .loading-text {
+      font-size: 3rem;
+      color: rgba(253, 248, 229, 0.7);
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 8px solid rgba(255, 112, 48, 0.2);
+      border-top: 8px solid #ff7030;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .news-counter {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 112, 48, 0.2);
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 1.6rem;
+      color: rgba(253, 248, 229, 0.8);
+      border: 2px solid rgba(255, 112, 48, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">HAM RADIO NEWS</div>
+      <div class="header-subtitle">Latest from ARRL, QRZ, SWLing Post, AR Newsline, OnAllBands, K0NR &amp; EtherHam</div>
+    </div>
+
+    <div id="newsCardContainer">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading amateur radio news...</div>
+      </div>
+    </div>
+
+    <div class="news-counter" id="newsCounter">Loading...</div>
+  </div>
+
+  <script>
+    /* ============================================================
+       TUNING CONSTANTS
+       ============================================================ */
+    const ROTATE_SECONDS  = 30;   // how long each article is displayed
+    const REFRESH_MINUTES = 30;   // how often feeds are refetched
+    const MAX_AGE_DAYS    = 7;    // hide articles older than this
+    const DESC_MAX_CHARS  = 400;  // description truncation target
+
+    // Path prefix for fallback images. Empty string = repo root.
+    // If you later move images into a folder, change to e.g. 'images/'.
+    const IMAGE_PATH = '';
+
+    /* ============================================================
+       FALLBACK IMAGE SYSTEM
+       When an article has no image (or its image fails to load),
+       we pick a stock image from the repo:
+       1. Keyword match on the headline (first match wins, top to bottom)
+       2. Otherwise a hash of the headline picks from the full pool,
+          so a given article always shows the same image.
+       ============================================================ */
+    const KEYWORD_IMAGES = [
+      { image: 'antennatower.jpg',   keywords: ['antenna', 'tower', 'mast', 'yagi', 'dipole', 'beam', 'coax', 'feedline', 'hf ', 'dx', 'propagation'] },
+      { image: 'satalitedish.jpg',   keywords: ['satellite', 'amsat', 'iss', 'space', 'orbit', 'dish', 'eme', 'moonbounce'] },
+      { image: 'militaryradio.jpg',  keywords: ['military', 'mars', 'surplus', 'manpack', 'field day', 'emergency', 'emcomm', 'ares'] },
+      { image: 'mobileradio.jpg',    keywords: ['mobile', 'vehicle', 'repeater', 'vhf', 'uhf', '2 meter', '70cm', 'transceiver'] },
+      { image: 'kidwalkietalkie.jpg',keywords: ['youth', 'kids', 'school', 'beginner', 'new ham', 'license', 'exam', 'technician', 'gmrs', 'frs', 'walkie'] },
+      { image: 'hammarket.jpg',      keywords: ['hamfest', 'hamvention', 'swap', 'market', 'dealer', 'gear', 'review', 'price', 'release', 'product'] },
+      { image: 'onairsign.jpg',      keywords: ['podcast', 'broadcast', 'net ', 'show', 'episode', 'on air', 'on the air', 'contest', 'pota', 'sota'] },
+      { image: 'studiomic.jpg',      keywords: ['audio', 'microphone', 'mic ', 'studio', 'recording', 'interview', 'voice'] }
+    ];
+
+    const ALL_FALLBACK_IMAGES = KEYWORD_IMAGES.map(k => k.image);
+
+    function pickFallbackImage(title) {
+      const t = ' ' + (title || '').toLowerCase() + ' ';
+      for (const entry of KEYWORD_IMAGES) {
+        if (entry.keywords.some(k => t.includes(k))) {
+          return IMAGE_PATH + entry.image;
+        }
+      }
+      // Deterministic hash so the same article always gets the same image
+      let hash = 0;
+      for (let i = 0; i < title.length; i++) {
+        hash = ((hash << 5) - hash + title.charCodeAt(i)) | 0;
+      }
+      return IMAGE_PATH + ALL_FALLBACK_IMAGES[Math.abs(hash) % ALL_FALLBACK_IMAGES.length];
+    }
+
+    /* ============================================================
+       FEED SOURCES
+       ============================================================ */
+    const SOURCES = [
+      { name: 'ARRL',        url: 'https://api.rss2json.com/v1/api.json?rss_url=http://www.arrl.org/news/rss' },
+      { name: 'QRZ',         url: 'https://api.rss2json.com/v1/api.json?rss_url=https://forums.qrz.com/index.php?forums/qrz-news.26/index.rss' },
+      { name: 'SWLing Post', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://swling.com/blog/feed/' },
+      { name: 'AR Newsline', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.arnewsline.org/?format=rss' },
+      { name: 'OnAllBands',  url: 'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.feedburner.com/OnAllBands' },
+      { name: 'K0NR',        url: 'https://api.rss2json.com/v1/api.json?rss_url=https://k0nr.com/wordpress/feed' },
+      { name: 'EtherHam',    url: 'https://api.rss2json.com/v1/api.json?rss_url=https://etherham.com/feed/feedlist/' }
+    ];
+
+    /* ============================================================
+       STATE
+       ============================================================ */
+    let newsItems = [];
+    let currentNewsIndex = 0;
+    let secondsSinceRotate = 0;
+    let secondsSinceRefresh = 0;
+    let isFetching = false;
+
+    /* ============================================================
+       FETCH + NORMALIZE
+       Builds into a temp array and only swaps it in if non-empty,
+       so a failed refresh never wipes the display (stale-data rule).
+       ============================================================ */
+    async function fetchHamRadioNews() {
+      if (isFetching) return;
+      isFetching = true;
+
+      const fresh = [];
+      const seenTitles = new Set();
+
+      for (const source of SOURCES) {
+        try {
+          const response = await fetch(source.url);
+          const data = await response.json();
+
+          if (data.status === 'ok' && data.items) {
+            data.items.forEach(item => {
+              const title = (item.title || '').trim();
+              const titleKey = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (!title || seenTitles.has(titleKey)) return; // dedup (EtherHam overlaps other feeds)
+              seenTitles.add(titleKey);
+
+              fresh.push({
+                title: title,
+                description: item.description || item.content || 'No description available.',
+                source: source.name,
+                pubDate: new Date(item.pubDate),
+                link: item.link,
+                image: item.thumbnail || (item.enclosure && item.enclosure.link) || null
+              });
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching ' + source.name + ' news:', error);
+        }
+      }
+
+      // Newest first, then drop anything older than MAX_AGE_DAYS
+      fresh.sort((a, b) => b.pubDate - a.pubDate);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - MAX_AGE_DAYS);
+      const filtered = fresh.filter(item => item.pubDate >= cutoff);
+
+      const isFirstLoad = newsItems.length === 0;
+
+      if (filtered.length > 0) {
+        newsItems = filtered;
+        // Clamp index in case the list shrank
+        if (currentNewsIndex >= newsItems.length) currentNewsIndex = 0;
+        if (isFirstLoad) renderCard();
+      } else if (isFirstLoad) {
+        document.getElementById('newsCardContainer').innerHTML =
+          '<div class="loading"><div class="loading-text">No news available at this time.</div></div>';
+      }
+      // If filtered is empty but we already have items: keep showing them.
+
+      isFetching = false;
+    }
+
+    /* ============================================================
+       TEXT HELPERS
+       ============================================================ */
+    function stripHTML(html) {
+      const tmp = document.createElement('DIV');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    function cleanDescription(rawHtml, title) {
+      let text = stripHTML(rawHtml);
+
+      // Strip WordPress feed boilerplate: "The post X appeared first on Y."
+      text = text.replace(/The post .{0,200}? appeared first on .{0,100}?(\.|$)/gi, '');
+      // Strip dangling "[…]" / "[...]" markers
+      text = text.replace(/\[\s*(…|\.\.\.)\s*\]/g, '…');
+      // Some feeds repeat the headline at the start of the description
+      if (title && text.toLowerCase().startsWith(title.toLowerCase())) {
+        text = text.slice(title.length);
+      }
+      text = text.replace(/\s+/g, ' ').trim();
+
+      // Truncate at a word boundary
+      if (text.length > DESC_MAX_CHARS) {
+        text = text.substring(0, DESC_MAX_CHARS);
+        const lastSpace = text.lastIndexOf(' ');
+        if (lastSpace > DESC_MAX_CHARS * 0.6) text = text.substring(0, lastSpace);
+        text += '…';
+      }
+
+      return text || 'No description available.';
+    }
+
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+      if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+
+      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    /* ============================================================
+       RENDER
+       Counter reflects the article currently on screen
+       (the old version incremented before updating, off by one).
+       ============================================================ */
+    function renderCard() {
+      const container = document.getElementById('newsCardContainer');
+      const item = newsItems[currentNewsIndex];
+      if (!item) return;
+
+      const existingCard = container.querySelector('.news-card');
+      if (existingCard) {
+        existingCard.classList.remove('active');
+        setTimeout(buildCard, 600);
+      } else {
+        buildCard();
+      }
+
+      function buildCard() {
+        const description = cleanDescription(item.description, item.title);
+        const timeAgo = getTimeAgo(item.pubDate);
+        const qrId = 'qr-' + Date.now();
+        const fallbackSrc = pickFallbackImage(item.title);
+        const imgSrc = item.image || fallbackSrc;
+
+        container.innerHTML =
+          '<div class="news-card">' +
+            '<div class="news-image-container">' +
+              '<img src="' + imgSrc + '" alt="" class="news-image" ' +
+                   'onerror="this.onerror=null; this.src=\'' + fallbackSrc + '\';">' +
+              '<div class="news-source-badge">' + escapeHTML(item.source) + '</div>' +
+            '</div>' +
+            '<div class="news-content">' +
+              '<div class="news-headline">' + escapeHTML(item.title) + '</div>' +
+              '<div class="news-description">' + escapeHTML(description) + '</div>' +
+              '<div class="news-footer">' +
+                '<div class="news-meta">' +
+                  '<div class="news-time">📅 ' + timeAgo + '</div>' +
+                '</div>' +
+                '<div class="news-qr-section">' +
+                  '<div class="qr-code" id="' + qrId + '"></div>' +
+                  '<div class="qr-label">Scan to Read Full Article</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        setTimeout(() => {
+          const qrElement = document.getElementById(qrId);
+          if (qrElement && item.link) {
+            new QRCode(qrElement, {
+              text: item.link,
+              width: 150,
+              height: 150,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          }
+          const newCard = container.querySelector('.news-card');
+          if (newCard) {
+            setTimeout(() => newCard.classList.add('active'), 100);
+          }
+        }, 100);
+      }
+
+      updateCounter();
+    }
+
+    function updateCounter() {
+      const counter = document.getElementById('newsCounter');
+      if (newsItems.length > 0) {
+        counter.textContent = 'Article ' + (currentNewsIndex + 1) + ' of ' + newsItems.length;
+      }
+    }
+
+    function advanceCard() {
+      if (newsItems.length === 0) return;
+      currentNewsIndex = (currentNewsIndex + 1) % newsItems.length;
+      renderCard();
+    }
+
+    /* ============================================================
+       SINGLE MASTER TICK
+       One 1-second interval drives both rotation and refresh,
+       so the two can never collide and double-swap a card.
+       ============================================================ */
+    setInterval(() => {
+      secondsSinceRotate++;
+      secondsSinceRefresh++;
+
+      if (secondsSinceRefresh >= REFRESH_MINUTES * 60) {
+        secondsSinceRefresh = 0;
+        fetchHamRadioNews();
+      }
+
+      if (secondsSinceRotate >= ROTATE_SECONDS) {
+        secondsSinceRotate = 0;
+        advanceCard();
+      }
+    }, 1000);
+
+    // Initial load
+    fetchHamRadioNews();
+  </script>
+</body>
+</html>
